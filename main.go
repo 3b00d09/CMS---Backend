@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const port string = ":3000"
+const port string = ":8080"
 
 func main() {
 	app := SetupRoutes()
