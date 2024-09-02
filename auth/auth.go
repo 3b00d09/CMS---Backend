@@ -14,7 +14,7 @@ import (
 
 func AuthenticateSession(cookie string) database.User {
 
-	statement, err := database.DB.Prepare("SELECT * FROM user_session WHERE id = ?")
+	statement, err := database.DB.Prepare("SELECT id, user_id, active_expires FROM user_session WHERE id = ?")
 
 	if err != nil {
 		log.Fatal(err)
@@ -24,9 +24,9 @@ func AuthenticateSession(cookie string) database.User {
 	row := statement.QueryRow(cookie)
 
 	var sessionID, userID string
-	var activeExpires, idleExpires int64
+	var activeExpires int64
 
-	err = row.Scan(&sessionID, &userID, &activeExpires, &idleExpires)
+	err = row.Scan(&sessionID, &userID, &activeExpires)
 	if err != nil {
 		return database.User{}
 	}
@@ -35,7 +35,7 @@ func AuthenticateSession(cookie string) database.User {
 		return database.User{}
 	 }
 
-	 statement, err = database.DB.Prepare("SELECT id, username FROM user WHERE id = ?")
+	 statement, err = database.DB.Prepare("SELECT username FROM user WHERE id = ?")
 
 	 if err != nil {	
 		 log.Fatal(err)

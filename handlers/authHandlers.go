@@ -159,3 +159,18 @@ func Logout(c *fiber.Ctx) error {
 			"message": "Hello, Logout!",
 	})
 }
+
+
+func ValidateSession(c *fiber.Ctx)(error){
+	cookie := c.Cookies("session_token")
+	if(cookie == ""){
+		return c.JSON(fiber.Map{
+				"username": "",
+		})
+	}
+	user := auth.AuthenticateSession(cookie)
+		
+	return c.JSON(fiber.Map{
+			"username": user.Username,
+	})
+}

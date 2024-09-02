@@ -11,5 +11,6 @@ func SetupRoutes() *fiber.App {
 	router.Post("/login", handlers.Login)
 	router.Post("/register", handlers.Register)
 	router.Get("/logout", handlers.Logout)
+	router.Get("/validate-session", handlers.ValidateSession)
 	return router
 }
