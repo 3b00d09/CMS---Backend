@@ -151,7 +151,7 @@ func Logout(c *fiber.Ctx) error {
 		Path:     "/",
 		MaxAge:   -1,
 		Expires:  time.Now().Add(-time.Hour),
-		Secure:   true,
+		Secure:   false,
 		SameSite: "lax",
 	})
 
