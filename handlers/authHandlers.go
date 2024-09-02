@@ -8,30 +8,50 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Register(c *fiber.Ctx) error {
+type RegisterData struct {
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	RepeatPassword string `json:"repeatPassword"`
+}
 
+type LoginData struct {
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+}
+
+func Register(c *fiber.Ctx) error {
 	
-	user := database.UserCredentials{
-		Username: "test",
-		Password: "test",
+	var RegisterData RegisterData
+
+	err := c.BodyParser(&RegisterData)
+
+	if err != nil{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return c.JSON(fiber.Map{
+			"error": "Internal Server Error.",
+		})
 	}
 
-	passwordRepeat := "test"
 
-	if(user.Password != passwordRepeat){
+	if(RegisterData.Password != RegisterData.RepeatPassword){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
 			"error": "Passwords do not match",
 		})
 	}
 
-	isUniqueUsername, err := auth.IsUniqueUsername(user.Username)
+	isUniqueUsername, err := auth.IsUniqueUsername(RegisterData.Username)
 
 	if(err != nil || !isUniqueUsername){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
 			"error": err.Error(),
 		})
+	}
+
+	user := database.UserCredentials{
+		Username: RegisterData.Username,
+		Password: RegisterData.Password,
 	}
 
 	userID, err := auth.CreateUser(user)
@@ -54,14 +74,26 @@ func Register(c *fiber.Ctx) error {
 	c.Cookie(cookie)
 
 	return c.JSON(fiber.Map{
-			"message": "Hello, Register!",
+		"username": user.Username,
 	})
 }
 
 func Login(c *fiber.Ctx) error {
+
+	var LoginData LoginData
+
+	err := c.BodyParser(&LoginData)
+
+	if err != nil{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return c.JSON(fiber.Map{
+			"error": "Internal Server Error.",
+		})
+	}
+
 	user := database.UserCredentials{
-		Username: "test",
-		Password: "test",
+		Username: LoginData.Username,
+		Password: LoginData.Password,
 	}
 
 	validUser, err := auth.UserExists(user)
@@ -90,9 +122,9 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	c.Cookie(cookie)
-
+	
 	return c.JSON(fiber.Map{
-			"message": "Hello, Login!",
+		"username": user.Username,
 	})
 }
 
