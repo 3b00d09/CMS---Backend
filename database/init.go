@@ -15,9 +15,11 @@ var DB *sql.DB
 // the init function runs before main automatically
 func init() {
 	
-	if err := godotenv.Load(); err != nil {
-		fmt.Print("Failed to load .env")
-		return
+	// if fly_app_name exists then we are in production, otherwise we load the local .env file
+	if os.Getenv("FLY_APP_NAME") == "" {
+		if err := godotenv.Load(); err != nil {
+			fmt.Println("Warning: Failed to load .env file")
+		}
 	}
 
 	var err error
