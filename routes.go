@@ -8,8 +8,8 @@ import (
 
 func SetupRoutes() *fiber.App {
 	router := fiber.New()
-	router.Get("/login", handlers.Login)
-	router.Get("/register", handlers.Register)
+	router.Post("/login", handlers.Login)
+	router.Post("/register", handlers.Register)
 	router.Get("/logout", handlers.Logout)
 	return router
 }
