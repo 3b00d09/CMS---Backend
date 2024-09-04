@@ -5,10 +5,14 @@ type User struct {
 	Username string `db:"username"`
 }
 
+// validate required tag is important for the library that makes sure the request body has all fields
 type UserCredentials struct {
-	ID       string `db:"id"`
-	Username string `db:"username"`
-	Password string `db:"password"`
+	ID        string `json:"id" db:"id"`
+	Username  string `json:"username" db:"username" validate:"required"`
+	Password  string `json:"password" db:"password" validate:"required"`
+	FirstName string `json:"firstName" db:"first_name" validate:"required"`
+	LastName  string `json:"lastName" db:"last_name" validate:"required"`
+	Email     string `json:"email" db:"email" validate:"required,email"`
 }
 
 type UserSession struct {

@@ -97,7 +97,7 @@ func UserExists(User database.UserCredentials) (database.User, error) {
 func CreateUser(user database.UserCredentials) (string, error) {
 	hashedPassword := GeneratHashedPassword(user.Password)
 	
-	statement, err := database.DB.Prepare("INSERT INTO user (id, username, password) VALUES (?, ?, ?)")
+	statement, err := database.DB.Prepare("INSERT INTO user (id, username, password, first_name, last_name, email) VALUES (?, ?, ?, ?, ?, ?)")
 	
 	if err != nil {
 		return "", fmt.Errorf("internal server error")
@@ -107,7 +107,7 @@ func CreateUser(user database.UserCredentials) (string, error) {
 
 	user.ID = uuid.New().String()
 
-	_, err = statement.Exec(user.ID, user.Username, hashedPassword)
+	_, err = statement.Exec(user.ID, user.Username, hashedPassword, user.FirstName, user.LastName, user.Email)
 
 	if err != nil {
 		fmt.Println(err)
@@ -150,7 +150,7 @@ func CreateSession(userId string) (*fiber.Cookie, error) {
 		Path:     "/",
 		MaxAge:   3600,
 		Secure:   true,
-		SameSite: "lax",
+		SameSite: "none",
 	}
 
 	return cookie, nil

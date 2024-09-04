@@ -5,14 +5,10 @@ import (
 	"CMS-Backend/database"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
-type RegisterData struct {
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	RepeatPassword string `json:"repeatPassword"`
-}
 
 type LoginData struct {
 	Username       string `json:"username"`
@@ -21,7 +17,7 @@ type LoginData struct {
 
 func Register(c *fiber.Ctx) error {
 	
-	var RegisterData RegisterData
+	var RegisterData database.UserCredentials
 
 	err := c.BodyParser(&RegisterData)
 
@@ -32,11 +28,14 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
+	validate := validator.New()
 
-	if(RegisterData.Password != RegisterData.RepeatPassword){
+	err = validate.Struct(RegisterData)
+
+	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": "Passwords do not match",
+			"error": "Incomplete form submission",
 		})
 	}
 
@@ -49,12 +48,7 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
-	user := database.UserCredentials{
-		Username: RegisterData.Username,
-		Password: RegisterData.Password,
-	}
-
-	userID, err := auth.CreateUser(user)
+	userID, err := auth.CreateUser(RegisterData)
 
 	if(err != nil){
 		c.Status(fiber.StatusUnprocessableEntity)
@@ -74,7 +68,7 @@ func Register(c *fiber.Ctx) error {
 	c.Cookie(cookie)
 
 	return c.JSON(fiber.Map{
-		"username": user.Username,
+		"username": RegisterData.Username,
 	})
 }
 
@@ -151,8 +145,8 @@ func Logout(c *fiber.Ctx) error {
 		Path:     "/",
 		MaxAge:   -1,
 		Expires:  time.Now().Add(-time.Hour),
-		Secure:   false,
-		SameSite: "lax",
+		Secure:   true,
+		SameSite: "none",
 	})
 
 	return c.JSON(fiber.Map{
