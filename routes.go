@@ -11,7 +11,7 @@ func SetupRoutes() *fiber.App {
 	router := fiber.New()
 	router.Use(cors.New(cors.Config{
 	AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
-	AllowOrigins:     "http://localhost:4200",
+	AllowOrigins:     "https://cms-frontend-angular-gamma.vercel.app/",
 	AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	AllowCredentials: true,
 	}))
@@ -19,5 +19,6 @@ func SetupRoutes() *fiber.App {
 	router.Post("/register", handlers.Register)
 	router.Get("/logout", handlers.Logout)
 	router.Get("/validate-session", handlers.ValidateSession)
+	router.Post("/create-project", handlers.HandleCreateProject)
 	return router
 }

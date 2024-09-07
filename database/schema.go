@@ -11,7 +11,7 @@ func RunSchema(db *sql.DB) {
 		password TEXT NOT NULL,
 		first_name TEXT NOT NULL,
 		last_name TEXT NOT NULL,
-		email TEXT NOT NULL,
+		email TEXT NOT NULL
 	);
 	
 	CREATE TABLE IF NOT EXISTS user_session (
@@ -20,6 +20,12 @@ func RunSchema(db *sql.DB) {
 		active_expires INTEGER NOT NULL,
 		idle_expires INTEGER NOT NULL
 	);
+
+	CREATE TABLE IF NOT EXISTS projects(
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+		creator_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+		name TEXT NOT NULL 
+	)
 	`
 
 	db.Exec(create)

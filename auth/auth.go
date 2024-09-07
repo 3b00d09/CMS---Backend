@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -173,19 +172,6 @@ func ClearSession(token string) (error){
 
 	return nil
 
-}
-
-func AuthenticateRequest(w http.ResponseWriter, r *http.Request) database.User {
-
-	cookie, err := r.Cookie("session_token")
-
-	if err != nil || cookie == nil{
-		return database.User{}
-	}
-
-	user := AuthenticateSession(cookie.Value) 
-
-	return user
 }
 
 func ClearUserSessions(userId string){

@@ -24,7 +24,7 @@ func Register(c *fiber.Ctx) error {
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": "Internal Server Error.",
+			"message": "Internal Server Error.",
 		})
 	}
 
@@ -35,7 +35,7 @@ func Register(c *fiber.Ctx) error {
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": "Incomplete form submission",
+			"message": "Incomplete form submission",
 		})
 	}
 
@@ -44,7 +44,7 @@ func Register(c *fiber.Ctx) error {
 	if(err != nil || !isUniqueUsername){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 
@@ -53,7 +53,7 @@ func Register(c *fiber.Ctx) error {
 	if(err != nil){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 
@@ -61,7 +61,7 @@ func Register(c *fiber.Ctx) error {
 
 	if(err != nil){
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 
@@ -81,7 +81,7 @@ func Login(c *fiber.Ctx) error {
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": "Internal Server Error.",
+			"message": "Internal Server Error.",
 		})
 	}
 
@@ -95,14 +95,14 @@ func Login(c *fiber.Ctx) error {
 	if(err != nil){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 
 	if(validUser.ID == ""){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": "User does not exist",
+			"message": "User does not exist",
 		})
 	}
 
@@ -111,7 +111,7 @@ func Login(c *fiber.Ctx) error {
 	if(err != nil){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 
@@ -135,7 +135,7 @@ func Logout(c *fiber.Ctx) error {
 	if(err != nil){
 		c.Status(fiber.StatusUnprocessableEntity)
 		return c.JSON(fiber.Map{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	}
 	
@@ -150,7 +150,7 @@ func Logout(c *fiber.Ctx) error {
 	})
 
 	return c.JSON(fiber.Map{
-			"message": "Hello, Logout!",
+			"message": "Logout Successful.",
 	})
 }
 

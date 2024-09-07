@@ -21,3 +21,9 @@ type UserSession struct {
 	ActiveExpires int64  `db:"active_expires"`
 	IdleExpires   int64  `db:"idle_expires"`
 }
+
+type Project struct {
+	ID          string `json:"id" db:"id"`
+	Username    string `json:"username" db:"username" validate:"required"`
+	ProjectName string `json:"project_name" db:"name" validate:"required"`
+}
