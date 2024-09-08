@@ -5,14 +5,14 @@ import (
 	"CMS-Backend/database"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type CreateProjectData struct {
 	ProjectName string `json:"project_name" db:"name" validate:"required"`
 }
 
-func HandleCreateProject(c *fiber.Ctx) error {
+func HandleCreateProject(c fiber.Ctx) error {
 	cookie := c.Cookies("session_token")
 	user := auth.AuthenticateSession(cookie)
 
@@ -25,7 +25,7 @@ func HandleCreateProject(c *fiber.Ctx) error {
 
 	var ProjectData CreateProjectData
 
-	c.BodyParser(&ProjectData)
+	c.Bind().Body(&ProjectData)
 
 	validate := validator.New()
 

@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
@@ -43,7 +43,7 @@ func AuthenticateSession(cookie string) database.User {
 
 	 row = statement.QueryRow(userID)
 	 User := database.User{}
-	 err = row.Scan(&User.ID, &User.Username)
+	 err = row.Scan(&User.Username)
 
 	 if err != nil {
 		 return database.User{}
@@ -147,9 +147,12 @@ func CreateSession(userId string) (*fiber.Cookie, error) {
 		Name:     "session_token",
 		Value:    sessionId,
 		Path:     "/",
-		MaxAge:   3600,
+		MaxAge:   int(newSession.ActiveExpires),
 		Secure:   true,
+		HTTPOnly: true,
 		SameSite: "none",
+		Partitioned: true,
+		
 	}
 
 	return cookie, nil

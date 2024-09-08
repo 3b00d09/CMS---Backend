@@ -3,10 +3,9 @@ package handlers
 import (
 	"CMS-Backend/auth"
 	"CMS-Backend/database"
-	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 
@@ -15,11 +14,11 @@ type LoginData struct {
 	Password       string `json:"password"`
 }
 
-func Register(c *fiber.Ctx) error {
+func Register(c fiber.Ctx) error {
 	
 	var RegisterData database.UserCredentials
 
-	err := c.BodyParser(&RegisterData)
+	err := c.Bind().Body(&RegisterData)
 
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
@@ -72,11 +71,11 @@ func Register(c *fiber.Ctx) error {
 	})
 }
 
-func Login(c *fiber.Ctx) error {
+func Login(c fiber.Ctx) error {
 
 	var LoginData LoginData
 
-	err := c.BodyParser(&LoginData)
+	err := c.Bind().Body(&LoginData)
 
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
@@ -122,12 +121,14 @@ func Login(c *fiber.Ctx) error {
 	})
 }
 
-func Logout(c *fiber.Ctx) error {
+func Logout(c fiber.Ctx) error {
 
 	cookie := c.Cookies("session_token")
 	if(cookie == ""){
 		c.Status(fiber.StatusUnprocessableEntity)
-		return c.Redirect("/")
+		return c.JSON(fiber.Map{
+			"message": "session not found",
+		})
 	}
 
 	err := auth.ClearSession(cookie)
@@ -144,9 +145,9 @@ func Logout(c *fiber.Ctx) error {
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
-		Expires:  time.Now().Add(-time.Hour),
 		Secure:   true,
 		SameSite: "none",
+		Partitioned: true,
 	})
 
 	return c.JSON(fiber.Map{
@@ -155,7 +156,7 @@ func Logout(c *fiber.Ctx) error {
 }
 
 
-func ValidateSession(c *fiber.Ctx)(error){
+func ValidateSession(c fiber.Ctx)(error){
 	cookie := c.Cookies("session_token")
 	if(cookie == ""){
 		return c.JSON(fiber.Map{
