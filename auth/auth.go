@@ -49,6 +49,7 @@ func AuthenticateSession(cookie string) database.User {
 		 return database.User{}
 	 }
 
+	 User.ID = userID
 	 return User	
 
 }

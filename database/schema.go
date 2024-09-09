@@ -24,7 +24,8 @@ func RunSchema(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS projects(
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 		creator_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-		name TEXT NOT NULL 
+		name TEXT NOT NULL,
+		description TEXT
 	)
 	`
 
