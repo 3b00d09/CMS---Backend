@@ -151,7 +151,7 @@ func HandleSearchUsers(c fiber.Ctx) error{
 		})
 	}
 
-	statement, err := database.DB.Prepare("SELECT username FROM user WHERE username LIKE ? AND id != ?")
+	statement, err := database.DB.Prepare("SELECT username FROM user WHERE LOWER(username) LIKE LOWER(?) AND id != ?")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
