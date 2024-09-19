@@ -27,6 +27,14 @@ func RunSchema(db *sql.DB) {
 		name TEXT NOT NULL,
 		description TEXT
 	)
+
+	CREATE TABLE IF NOT EXISTS pages(
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+		name TEXT NOT NULL,
+		content TEXT NOT NULL DEFAULT "",
+		UNIQUE(project_id, name)
+	)
 	`
 
 	db.Exec(create)

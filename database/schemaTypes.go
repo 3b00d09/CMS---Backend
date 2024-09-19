@@ -27,3 +27,10 @@ type Project struct {
 	Username    string `json:"username" db:"username" validate:"required"`
 	ProjectName string `json:"project_name" db:"name" validate:"required"`
 }
+
+type Page struct {
+	ID        string `json:"id" db:"id"`
+	ProjectID string `json:"project_id" db:"project_id"`
+	Name      string `json:"name" db:"name"`
+	Content   string `json:"content" db:"content"`
+}

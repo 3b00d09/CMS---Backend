@@ -14,6 +14,17 @@ type CreateProjectData struct {
 	ProjectDescription string `json:"project_description"`
 }
 
+type CreatePageData struct {
+	ProjectName string `json:"project_name" validate:"required"`
+	PageName string `json:"page_name" validate:"required"`
+}
+
+type UpdatePageData struct {
+	ProjectName string `json:"project_name" validate:"required"`
+	PageName string `json:"page_name" validate:"required"`
+	Content string `json:"content" validate:"required"`
+}
+
 func HandleCreateProject(c fiber.Ctx) error {
 	cookie := c.Cookies("session_token")
 	user := auth.AuthenticateSession(cookie)
@@ -189,6 +200,170 @@ func HandleSearchUsers(c fiber.Ctx) error{
 
 	return c.JSON(fiber.Map{
 		"data": users,
+	})
+
+}
+
+func HandleCreatePage(c fiber.Ctx) error{
+	cookie := c.Cookies("session_token")
+	user := auth.AuthenticateSession(cookie)
+
+	if(len(user.Username) ==  0 || len(user.ID) == 0){
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Invalid session.",
+		})
+	}
+
+	var PageData CreatePageData
+	c.Bind().Body(&PageData)
+	validator := validator.New()
+	err := validator.Struct(PageData)
+
+	if err != nil{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return c.JSON(fiber.Map{
+			"message": "Incomplete form submission",
+		})
+	}
+
+	statement, err := database.DB.Prepare("SELECT id, creator_id FROM projects WHERE name = ?")
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	defer statement.Close()
+	
+	var project struct{
+		ProjectID string `db:"id"`
+		CreatorID string `db:"creator_id"`
+	}
+	err = statement.QueryRow(PageData.ProjectName).Scan(&project.ProjectID, &project.CreatorID)
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	if(project.CreatorID != user.ID){
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "You are not authorized to create a page in this project.",
+		})
+	}
+
+	statement, err = database.DB.Prepare("INSERT INTO pages (project_id, name) VALUES (?, ?)")
+
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+
+	_, err = statement.Exec(project.ProjectID, PageData.PageName)
+
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Page created successfully",
+	})
+}
+
+func HandleUpdatePage(c fiber.Ctx) error {
+	cookie := c.Cookies("session_token")
+	user := auth.AuthenticateSession(cookie)
+
+	if(len(user.Username) ==  0 || len(user.ID) == 0){
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "Invalid session.",
+		})
+	}
+
+	var PageData UpdatePageData
+	c.Bind().Body(&PageData)
+	validator := validator.New()
+	err := validator.Struct(PageData)
+
+	if err != nil{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return c.JSON(fiber.Map{
+			"message": "Incomplete form submission",
+		})
+	}
+
+	statement, err := database.DB.Prepare("SELECT id, creator_id FROM projects WHERE name = ?")
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	defer statement.Close()
+	
+	var project struct{
+		ProjectID string `db:"id"`
+		CreatorID string `db:"creator_id"`
+	}
+	err = statement.QueryRow(PageData.ProjectName).Scan(&project.ProjectID, &project.CreatorID)
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	if(project.CreatorID != user.ID){
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message": "You are not authorized to edit a page in this project.",
+		})
+	}
+
+	statement, err = database.DB.Prepare("UPDATE pages SET content = ? WHERE project_id = ? AND name = ?")
+
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	_, err = statement.Exec(PageData.Content, project.ProjectID, PageData.PageName)
+
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return c.JSON(fiber.Map{
+			"message": "Internal server error.",
+			"detail": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Page updated successfully",
 	})
 
 }
