@@ -25,5 +25,6 @@ func SetupRoutes() *fiber.App {
 	router.Get("/users", handlers.HandleSearchUsers)
 	router.Post("/create-page", handlers.HandleCreatePage)
 	router.Put("/update-page", handlers.HandleUpdatePage)
+	router.Get("/page", handlers.HandleGetPage)
 	return router
 }
