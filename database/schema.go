@@ -25,6 +25,7 @@ func RunSchema(db *sql.DB) {
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
 		creator_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
 		name TEXT NOT NULL,
+		last_updated INTEGER NOT NULL,
 		description TEXT
 	)
 
