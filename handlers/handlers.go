@@ -3,6 +3,7 @@ package handlers
 import (
 	"CMS-Backend/auth"
 	"CMS-Backend/database"
+	"CMS-Backend/helpers"
 	"strings"
 
 	"time"
@@ -38,9 +39,7 @@ func HandleCreateProject(c fiber.Ctx) error {
 
 	if(len(user.Username) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	var ProjectData CreateProjectData
@@ -53,19 +52,14 @@ func HandleCreateProject(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare("INSERT INTO projects (creator_id, name, description, last_updated) VALUES (?, ?, ?, ?)")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail":err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -74,10 +68,7 @@ func HandleCreateProject(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -96,9 +87,7 @@ func HandleGetProjects(c fiber.Ctx) error{
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	includePages := c.Query("pages")
@@ -111,10 +100,7 @@ func HandleGetProjects(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -127,10 +113,7 @@ func HandleGetProjects(c fiber.Ctx) error{
 	rows, err := statement.Query(user.ID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-			"detail":  err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 	defer rows.Close()
 
@@ -141,10 +124,7 @@ func HandleGetProjects(c fiber.Ctx) error{
 		}
 		if err := rows.Scan(&project.ProjectName, &project.ProjectDescription); err != nil {
 			c.Status(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{
-				"message": "Internal server error",
-				"detail":  err.Error(),
-			})
+			return helpers.ServerError(c, err)
 		}
 		ProjectData = append(ProjectData, project)
 	}
@@ -160,9 +140,7 @@ func HandleSearchUsers(c fiber.Ctx) error{
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	queryParam := c.Query("q")
@@ -179,10 +157,7 @@ func HandleSearchUsers(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -192,10 +167,7 @@ func HandleSearchUsers(c fiber.Ctx) error{
 	rows, err := statement.Query("%" + queryParam + "%", user.ID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-			"detail":  err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 	defer rows.Close()
 
@@ -203,10 +175,7 @@ func HandleSearchUsers(c fiber.Ctx) error{
 		var username string
 		if err := rows.Scan(&username); err != nil {
 			c.Status(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{
-				"message": "Internal server error",
-				"detail":  err.Error(),
-			})
+			return helpers.ServerError(c, err)
 		}
 		users = append(users, username)
 	}
@@ -223,9 +192,7 @@ func HandleCreatePage(c fiber.Ctx) error{
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	var PageData CreatePageData
@@ -235,19 +202,14 @@ func HandleCreatePage(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare("SELECT id, creator_id FROM projects WHERE name = ?")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -260,10 +222,7 @@ func HandleCreatePage(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	if(project.CreatorID != user.ID){
@@ -277,10 +236,7 @@ func HandleCreatePage(c fiber.Ctx) error{
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 
@@ -288,30 +244,21 @@ func HandleCreatePage(c fiber.Ctx) error{
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	statement, err = database.DB.Prepare("UPDATE projects SET last_updated = ? WHERE id = ?")
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	_, err = statement.Exec(time.Now().Unix(), project.ProjectID)
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -324,9 +271,7 @@ func HandleGetPage(c fiber.Ctx) error{
 	user := auth.AuthenticateSession(cookie)
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	pageQueryParam := c.Query("page")
@@ -334,19 +279,14 @@ func HandleGetPage(c fiber.Ctx) error{
 
 	if(len(pageQueryParam) == 0 || len(projectQueryParam) == 0){
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare("SELECT id, creator_id FROM projects WHERE name = ?")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -360,10 +300,7 @@ func HandleGetPage(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	if(project.CreatorID != user.ID){
@@ -377,10 +314,7 @@ func HandleGetPage(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	var content string
@@ -388,10 +322,7 @@ func HandleGetPage(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -406,9 +337,7 @@ func HandleUpdatePage(c fiber.Ctx) error {
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	var PageData UpdatePageData
@@ -418,19 +347,14 @@ func HandleUpdatePage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusUnprocessableEntity)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare("SELECT id, creator_id FROM projects WHERE name = ?")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -443,10 +367,7 @@ func HandleUpdatePage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	if(project.CreatorID != user.ID){
@@ -460,40 +381,28 @@ func HandleUpdatePage(c fiber.Ctx) error {
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	_, err = statement.Exec(PageData.Content, project.ProjectID, PageData.PageName)
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	statement, err = database.DB.Prepare("UPDATE projects SET last_updated = ? WHERE id = ?")
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	_, err = statement.Exec(time.Now().Unix(), project.ProjectID)
 
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -508,18 +417,14 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	projectQueryParam := c.Query("project")
 
 	if(len(projectQueryParam) == 0){
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 	
 
@@ -527,10 +432,7 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -541,10 +443,7 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 
@@ -552,10 +451,7 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -565,10 +461,7 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 	rows, err := statement.Query(projectID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error",
-			"detail":  err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer rows.Close()
@@ -579,10 +472,7 @@ func HandleGetProjectWithPages(c fiber.Ctx) error{
 		}
 		if err := rows.Scan(&page.PageName); err != nil {
 			c.Status(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{
-				"message": "Internal server error",
-				"detail":  err.Error(),
-			})
+			return helpers.ServerError(c, err)
 		}
 		pages = append(pages, page.PageName)
 	}
@@ -598,9 +488,7 @@ func HandleGetStatsPage(c fiber.Ctx) error {
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	statement, err := database.DB.Prepare(`
@@ -614,10 +502,7 @@ func HandleGetStatsPage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -631,10 +516,7 @@ func HandleGetStatsPage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -650,19 +532,14 @@ func HandleGetLastModified(c fiber.Ctx) error{
 
 	if(len(user.Username) ==  0 || len(user.ID) == 0){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	statement, err := database.DB.Prepare("SELECT name, last_updated FROM projects WHERE creator_id = ? ORDER BY last_updated DESC LIMIT 3")
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -676,10 +553,7 @@ func HandleGetLastModified(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer rows.Close()
@@ -692,10 +566,7 @@ func HandleGetLastModified(c fiber.Ctx) error{
 		err := rows.Scan(&project.ProjectName, &project.LastUpdated)
 		if err != nil {
 			c.Status(fiber.StatusInternalServerError)
-			return c.JSON(fiber.Map{
-				"message": "Internal server error",
-				"detail":  err.Error(),
-			})
+			return helpers.ServerError(c, err)
 		}
 		projects = append(projects, project)
 	}
@@ -712,9 +583,7 @@ func HandleDeletePage(c fiber.Ctx) error {
 
 	if(user.Username == ""){
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	pageQueryParam := c.Query("page")
@@ -722,9 +591,7 @@ func HandleDeletePage(c fiber.Ctx) error {
 
 	if(len(pageQueryParam) == 0 || len(projectQueryParam) == 0){
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare(`
@@ -735,10 +602,7 @@ func HandleDeletePage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -747,20 +611,14 @@ func HandleDeletePage(c fiber.Ctx) error {
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()	
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	if rowsAffected == 0{
@@ -781,18 +639,14 @@ func HandleDeleteProject(c fiber.Ctx) error{
 
 	if user.Username == ""{
 		c.Status(fiber.StatusUnauthorized)
-		return c.JSON(fiber.Map{
-			"message": "Invalid session.",
-		})
+		return helpers.SessionError(c)
 	}
 
 	projectQueryParam := c.Query("project")
 
 	if len(projectQueryParam) == 0{
 		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "Incomplete form submission",
-		})
+		return helpers.FormError(c)
 	}
 
 	statement, err := database.DB.Prepare(`
@@ -802,10 +656,7 @@ func HandleDeleteProject(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	defer statement.Close()
@@ -814,20 +665,14 @@ func HandleDeleteProject(c fiber.Ctx) error{
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 
 	if err != nil{
 		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "Internal server error.",
-			"detail": err.Error(),
-		})
+		return helpers.ServerError(c, err)
 	}
 
 	if rowsAffected == 0{
