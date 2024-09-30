@@ -36,6 +36,13 @@ func RunSchema(db *sql.DB) {
 		content TEXT NOT NULL DEFAULT "",
 		UNIQUE(project_id, name)
 	)
+
+	CREATE TABLE IF NOT EXISTS todo(
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+		content TEXT NOT NULL,
+		completed BOOLEAN NOT NULL DEFAULT FALSE
+	)
 	`
 
 	db.Exec(create)

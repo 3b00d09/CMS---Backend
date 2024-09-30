@@ -1,7 +1,9 @@
 package helpers
 
 import (
+	"CMS-Backend/database"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -22,3 +24,29 @@ func UnixToHuman(unix int64) string {
 
 }
 
+
+func GetProjectIdByName(name string, userID string) string{
+	
+	// if passing in invalid query param
+	if name == ""{
+		return ""
+	}
+	statement, err := database.DB.Prepare("SELECT id FROM projects WHERE LOWER(name) = ? AND creator_id = ?")
+
+	if err != nil{
+		return ""
+	}
+
+	defer statement.Close()
+
+	var projectId string
+
+	err = statement.QueryRow(strings.ToLower(name), userID).Scan(&projectId)
+
+	if err != nil{
+		return ""
+	} 
+
+	return projectId
+	
+}

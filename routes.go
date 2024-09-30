@@ -28,6 +28,9 @@ func SetupRoutes() *fiber.App {
 	router.Post("/create-page", handlers.HandleCreatePage)
 	router.Put("/update-page", handlers.HandleUpdatePage)
 	router.Get("/page", handlers.HandleGetPage)
+
+	router.Post("/create-todo", handlers.HandleCreateTodo)
+	router.Get("/todos", handlers.HandleGetTodos)
 	
 	// for total projects and pages created by user
 	router.Get("/stats-page", handlers.HandleGetStatsPage)

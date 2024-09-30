@@ -687,3 +687,125 @@ func HandleDeleteProject(c fiber.Ctx) error{
 	})
 
 }
+
+func HandleCreateTodo(c fiber.Ctx) error{
+
+	user := auth.AuthenticateSession(c.Cookies("session_token"))
+
+	if(user.Username == ""){
+		c.Status(fiber.StatusUnauthorized)
+		return helpers.SessionError(c)
+	}
+
+	var todo struct{
+		ProjectName string `json:"project_name" validate:"required"`
+		Content string `json:"content" validate:"required"`
+	}
+
+	c.Bind().Body(&todo)
+	validator := validator.New()
+	err := validator.Struct(todo)
+
+
+	if err != nil{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return helpers.FormError(c)
+	}
+
+
+	projectId := helpers.GetProjectIdByName(todo.ProjectName, user.ID)
+
+	if projectId == ""{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Project not found",
+		})
+	}
+
+	statement, err := database.DB.Prepare("INSERT INTO todo (project_id, content) VALUES (?, ?)")
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return helpers.ServerError(c, err);
+	}
+
+	defer statement.Close()
+
+	
+	_, err = statement.Exec(projectId, todo.Content)
+
+	if err != nil{
+		
+		c.Status(fiber.StatusInternalServerError)
+		return helpers.ServerError(c, err)
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Todo successfully created",
+	})
+
+}
+
+func HandleGetTodos(c fiber.Ctx) error{
+	user := auth.AuthenticateSession(c.Cookies("session_token"))
+
+	if user.Username == ""{
+		c.Status(fiber.StatusUnauthorized)
+		return helpers.SessionError(c)
+	}
+
+	if c.Query("project") == ""{
+		c.Status(fiber.StatusUnprocessableEntity)
+		return helpers.FormError(c)
+	}
+	projectID := helpers.GetProjectIdByName(c.Query("project"), user.ID)
+
+	if(len(projectID) == 0){
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Project not found",
+		})
+	}
+
+	statement, err := database.DB.Prepare("SELECT content, completed FROM todo WHERE project_id = ?")
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return helpers.ServerError(c, err)
+	}
+
+	defer statement.Close()
+
+
+	var todos[] struct {
+		Content string
+		Completed bool
+	}
+
+	rows, err := statement.Query(projectID)
+
+	if err != nil{
+		c.Status(fiber.StatusInternalServerError)
+		return helpers.ServerError(c, err)
+	}
+
+	for rows.Next(){
+		var todo struct{
+			Content string
+			Completed bool
+		}
+
+		err := rows.Scan(&todo.Content, &todo.Completed)
+		if err != nil{
+			c.Status(fiber.StatusInternalServerError)
+			return helpers.ServerError(c, err)
+		}
+
+		todos = append(todos, todo)
+	}
+
+	defer rows.Close()
+
+	return c.JSON(fiber.Map{
+		"data": todos,
+	})
+
+}
